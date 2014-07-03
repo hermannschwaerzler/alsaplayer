@@ -512,6 +512,7 @@ void Playlist::Next() {
 
 	// Tell the subscribing interfaces about the change
 	if (curritem != olditem) {
+		LockInterfaces();
 		if (interfaces.size() > 0) {
 			for (i = interfaces.begin(); i != interfaces.end(); i++) {
 				(*i)->CbSetCurrent(curritem);
@@ -522,6 +523,7 @@ void Playlist::Next() {
 				(*j)->cbsetcurrent((*j)->data, curritem);
 			}
 		}
+		UnlockInterfaces();
 	}
 	Unlock();
 }
