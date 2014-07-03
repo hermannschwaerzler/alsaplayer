@@ -9,7 +9,7 @@ AC_CANONICAL_TARGET([])
 AC_CONFIG_MACRO_DIR([m4])
 AC_CONFIG_HEADERS([config.h])
 
-AM_INIT_AUTOMAKE($PACKAGE_NAME,$PACKAGE_VERSION)
+AM_INIT_AUTOMAKE
 AM_SILENT_RULES([yes])
 
 dnl Add parameters for aclocal
@@ -22,8 +22,7 @@ AC_PROG_CXX
 AC_PROG_INSTALL
 AC_GNU_SOURCE
 
-AM_GNU_GETTEXT_VERSION([0.18.1])
-AM_GNU_GETTEXT([external])
+IT_PROG_INTLTOOL(0.50.0)
 
 AC_PROG_LN_S
 dnl static libs make no sense for alsaplayer
@@ -351,22 +350,20 @@ dnl ==========
 dnl ALSA stuff
 dnl ==========
 
+PKG_CHECK_MODULES(ALSA, alsa >= 1.0.4, have_alsa=yes, have_alsa=no)
+AC_SUBST(ALSA_LIBS)
 
-AC_MSG_CHECKING(for alsa version)
-AC_EGREP_CPP([AP_maGiC_VALUE],
-[
-#include <sys/asoundlib.h>
-#if defined(SND_LIB_MAJOR) && defined(SND_LIB_MINOR)
-#if SND_LIB_MAJOR>0 || (SND_LIB_MAJOR==0 && SND_LIB_MINOR>=6)
-AP_maGiC_VALUE
-#endif
-#endif
-],
-have_alsa=yes
-ALSA_LIB="-lasound"
-AC_MSG_RESULT([found latest])
-)
-
+# Clean up ALSA_CFLAGS.
+# For some insane reason, the ALSA people think its a good idea to provide a
+# trailing '/alsa' to their include path, but most people know the only
+# sensible way to access the package specific headers is via the namespaced
+# path, eg #include <alsa/header.h> for the alsa headers.
+#
+# Therefore we outright remove '-I/usr/include/alsa' because its completely
+# un-necessary  and then with whats left, remove the '/alsa' components.
+ALSA_CFLAGS=$(echo $ALSA_CFLAGS | sed 's|-I/usr/include/alsa||g' | sed 's|/alsa||g')
+AC_SUBST(ALSA_CFLAGS)
+AM_CONDITIONAL(HAVE_ALSA, test "x$have_alsa" = xyes)
 
 dnl =========
 dnl ESD stuff
